@@ -153,7 +153,7 @@ class SchemaArray extends PureComponent {
                   ) : null}
                 </Col>
                 <Col span={22}>
-                  <Input addonAfter={[<Checkbox disabled />, <Checkbox disabled />]} disabled value="Items" />
+                  <Input addonAfter={[<Checkbox key={'require'} disabled />, <Checkbox key={'isNull'} disabled />]} disabled value="Items" />
                 </Col>
               </Row>
             </Col>
