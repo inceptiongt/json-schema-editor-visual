@@ -3,6 +3,9 @@ A json-schema editor of high efficient and easy-to-use, base on React.
 
 ![avatar](json-schema-editor-visual.jpg)
 
+## Fork
+功能：添加“是否可为null”的CheckBox，设置类型是否可为null（如上图，红框）
+代码层面：type字段类型改为Array，因为可能需要表示两个类型——null和其他类型
 ## Usage
 ```
 npm install json-schema-editor-visual
