@@ -30,17 +30,25 @@ import utils from '../../utils';
 import MockSelect from '../MockSelect/index.js';
 
 const mapping = (name, data, showEdit, showAdv) => {
-  switch (data.type) {
-    case 'array':
-      return <SchemaArray prefix={name} data={data} showEdit={showEdit} showAdv={showAdv} />;
-      break;
-    case 'object':
-      let nameArray = [].concat(name, 'properties');
-      return <SchemaObject prefix={nameArray} data={data} showEdit={showEdit} showAdv={showAdv} />;
-      break;
-    default:
-      return null;
+  // switch (data.type) {
+  //   case 'array':
+  //     return <SchemaArray prefix={name} data={data} showEdit={showEdit} showAdv={showAdv} />;
+  //     break;
+  //   case 'object':
+  //     let nameArray = [].concat(name, 'properties');
+  //     return <SchemaObject prefix={nameArray} data={data} showEdit={showEdit} showAdv={showAdv} />;
+  //     break;
+  //   default:
+  //     return null;
+  // }
+  if (data.type.includes('array')) {
+    return <SchemaArray prefix={name} data={data} showEdit={showEdit} showAdv={showAdv} />;
   }
+  if (data.type.includes('object')) {
+    let nameArray = [].concat(name, 'properties');
+    return <SchemaObject prefix={nameArray} data={data} showEdit={showEdit} showAdv={showAdv} />;
+  }
+  return null
 };
 
 class SchemaArray extends PureComponent {
@@ -66,7 +74,7 @@ class SchemaArray extends PureComponent {
   handleChangeType = value => {
     let prefix = this.getPrefix();
     let key = [].concat(prefix, 'type');
-    this.Model.changeTypeAction({ key, value });
+    this.Model.changeTypeAction({ key, value: [value] });
   };
 
   // 修改备注信息
@@ -134,7 +142,7 @@ class SchemaArray extends PureComponent {
             >
               <Row type="flex" justify="space-around" align="middle">
                 <Col span={2} className="down-style-col">
-                  {items.type === 'object' ? (
+                  {items.type.includes('object') ? (
                     <span className="down-style" onClick={this.handleClickIcon}>
                       {showIcon ? (
                         <Icon className="icon-object" type="caret-down" />
@@ -145,7 +153,7 @@ class SchemaArray extends PureComponent {
                   ) : null}
                 </Col>
                 <Col span={22}>
-                  <Input addonAfter={<Checkbox disabled />} disabled value="Items" />
+                  <Input addonAfter={[<Checkbox disabled />, <Checkbox disabled />]} disabled value="Items" />
                 </Col>
               </Row>
             </Col>
@@ -155,6 +163,7 @@ class SchemaArray extends PureComponent {
                 className="type-select-style"
                 onChange={this.handleChangeType}
                 value={items.type}
+                // mode="multiple"
               >
                 {SCHEMA_TYPE.map((item, index) => {
                   return (
@@ -198,7 +207,7 @@ class SchemaArray extends PureComponent {
                 </Tooltip>
               </span>
 
-              {items.type === 'object' ? (
+              {items.type.includes('object') ? (
                 <span onClick={this.handleAddChildField}>
                   <Tooltip placement="top" title={LocaleProvider('add_child_node')}>
                     <Icon type="plus" className="plus" />
@@ -279,7 +288,7 @@ class SchemaItem extends PureComponent {
   handleChangeType = e => {
     let prefix = this.getPrefix();
     let key = [].concat(prefix, 'type');
-    this.Model.changeTypeAction({ key, value: e });
+    this.Model.changeTypeAction({ key, value: [e] });
   };
 
   // 删除节点
@@ -328,6 +337,13 @@ class SchemaItem extends PureComponent {
     this.Model.enableRequireAction({ prefix, name, required });
   };
 
+  // 修改是否可为null
+  handleEnableNull = e => {
+    const { prefix, name } = this.props;
+    let isNull = e.target.checked;
+    this.Model.enableNullAction({ prefix, name, isNull });
+  }
+
   render() {
     let { name, data, prefix, showEdit, showAdv } = this.props;
     let value = data.properties[name];
@@ -347,7 +363,7 @@ class SchemaItem extends PureComponent {
           >
             <Row type="flex" justify="space-around" align="middle">
               <Col span={2} className="down-style-col">
-                {value.type === 'object' ? (
+                {value.type.includes('object') ? (
                   <span className="down-style" onClick={this.handleClickIcon}>
                     {showIcon ? (
                       <Icon className="icon-object" type="caret-down" />
@@ -359,16 +375,27 @@ class SchemaItem extends PureComponent {
               </Col>
               <Col span={22}>
                 <FieldInput
-                  addonAfter={
-                    <Tooltip placement="top" title={LocaleProvider('required')}>
+                  addonAfter={[
+                    <Tooltip placement="top" title={LocaleProvider('required')} key={'required'}>
                       <Checkbox
                         onChange={this.handleEnableRequire}
                         checked={
                           _.isUndefined(data.required) ? false : data.required.indexOf(name) != -1
+                          
                         }
                       />
                     </Tooltip>
-                  }
+                    ,
+                    <Tooltip placement="top" title={LocaleProvider('isNull')} key={'isNull'}>
+                      <Checkbox
+                        onChange={this.handleEnableNull}
+                        checked={
+                          // _.isUndefined(data.required) ? false : data.required.indexOf(name) != -1
+                          value.type.includes('null')
+                        }
+                      />
+                    </Tooltip>
+                  ]}
                   onChange={this.handleChangeName}
                   value={name}
                 />
@@ -382,6 +409,7 @@ class SchemaItem extends PureComponent {
               className="type-select-style"
               onChange={this.handleChangeType}
               value={value.type}
+              // mode="multiple"
             >
               {SCHEMA_TYPE.map((item, index) => {
                 return (
@@ -441,7 +469,7 @@ class SchemaItem extends PureComponent {
             <span className="delete-item" onClick={this.handleDeleteItem}>
               <Icon type="close" className="close" />
             </span>
-            {value.type === 'object' ? (
+            {value.type.includes('object') ? (
               <DropPlus prefix={prefix} name={name} />
             ) : (
               <span onClick={this.handleAddField}>

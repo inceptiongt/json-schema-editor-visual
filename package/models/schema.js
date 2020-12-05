@@ -82,7 +82,17 @@ export default {
       return;
     }
     // let newParentData = utils.defaultSchema[value];
-    let newParentDataItem = utils.defaultSchema[value];
+    let newParentDataItem = value.reduce((r, item) => {
+      let defaultSchema = utils.defaultSchema[item]
+      r.type = r.type.concat(defaultSchema.type)
+      if (defaultSchema.items) {
+        r.items = defaultSchema.items
+      }
+      if (defaultSchema.properties){
+        r.properties = defaultSchema.properties
+      }
+      return r
+    }, { type: [] })
 
     // 将备注过滤出来
     let parentDataItem = parentData.description ? { description: parentData.description } : {};
@@ -115,10 +125,41 @@ export default {
     }
   },
 
+  enableNullAction: function(state, action, oldState) {
+    const keys = action.prefix;
+    // let parentKeys = utils.getParentKeys(keys);
+    let parentKeys = keys.concat([action.name])
+    let oldData = oldState.data;
+    let parentData = utils.getData(oldData, parentKeys);
+    let typeData = [].concat(parentData.type || []);
+    let index = typeData.indexOf('null');
+
+    if (!action.isNull && index >= 0) {
+      typeData.splice(index, 1);
+      parentKeys.push('type');
+      if (typeData.length === 0) {
+        utils.deleteData(state.data, parentKeys);
+      } else {
+        utils.setData(state.data, parentKeys, typeData);
+      }
+    } else if (action.isNull && index === -1) {
+      typeData.push('null');
+      parentKeys.push('type');
+      utils.setData(state.data, parentKeys, typeData);
+    }
+  },
+
   requireAllAction: function(state, action, oldState) {
     // let oldData = oldState.data;
     let data = utils.cloneObject(action.value);
     utils.handleSchemaRequired(data, action.required);
+
+    state.data = data;
+  },
+
+  isNullAllAction: function(state, action, oldState) {
+    let data = utils.cloneObject(action.value);
+    utils.handleSchemaIsNull(data, action.required);
 
     state.data = data;
   },

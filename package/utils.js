@@ -11,7 +11,7 @@ exports.format = [
   { name: 'uri' }
 ];
 const _ = require('underscore');
-exports.SCHEMA_TYPE = ['string', 'number', 'array', 'object', 'boolean', 'integer'];
+exports.SCHEMA_TYPE = ['string', 'number', 'array', 'object', 'boolean', 'integer', 'null'];
 exports.defaultSchema = {
   string: {
     type: 'string'
@@ -34,6 +34,9 @@ exports.defaultSchema = {
   },
   integer: {
     type: 'integer'
+  },
+  null: {
+    type: 'null'
   }
 };
 
@@ -102,7 +105,7 @@ function getFieldstitle(data) {
 
 function handleSchemaRequired(schema, checked) {
   // console.log(schema)
-  if (schema.type === 'object') {
+  if (schema.type.includes('object')) {
     let requiredtitle = getFieldstitle(schema.properties);
 
     // schema.required = checked ? [].concat(requiredtitle) : [];
@@ -113,7 +116,7 @@ function handleSchemaRequired(schema, checked) {
     }
 
     handleObject(schema.properties, checked);
-  } else if (schema.type === 'array') {
+  } else if (schema.type.includes('array')) {
     handleSchemaRequired(schema.items, checked);
   } else {
     return schema;
@@ -122,12 +125,34 @@ function handleSchemaRequired(schema, checked) {
 
 function handleObject(properties, checked) {
   for (var key in properties) {
-    if (properties[key].type === 'array' || properties[key].type === 'object')
+    if (properties[key].type.includes('array') || properties[key].type.includes('object'))
       handleSchemaRequired(properties[key], checked);
   }
 }
 
+function handleSchemaIsNull(schema, checked) {
+  if (checked) {
+    schema.type = [].concat(schema.type, 'null');
+  } else {
+    schema.type = _.without(schema.type, 'null')
+  }
+
+  if (schema.type.includes('object')) {
+    for(let i in schema.properties) {
+      handleSchemaIsNull(schema.properties[i], checked)
+    }
+
+  } else if (schema.type.includes('array')) {
+    if (schema.items.type.includes('object')) {
+      for(let i in schema.items.properties) {
+        handleSchemaIsNull(schema.items.properties[i], checked)
+      }
+    }
+  }
+}
+
 exports.handleSchemaRequired = handleSchemaRequired;
+exports.handleSchemaIsNull = handleSchemaIsNull;
 
 function cloneObject(obj) {
   if (typeof obj === 'object') {

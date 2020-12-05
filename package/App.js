@@ -49,6 +49,7 @@ class jsonSchema extends React.Component {
       itemKey: [],
       curItemCustomValue: null,
       checked: false,
+      checkedIsNull: false,
       editorModalName: '', // 弹窗名称desctiption | mock
       mock: ''
     };
@@ -195,7 +196,7 @@ class jsonSchema extends React.Component {
     type: 如果当前字段是object || array showEdit 不可用
   */
   showEdit = (prefix, name, value, type) => {
-    if (type === 'object' || type === 'array') {
+    if (type.includes('object') || type.includes('array')) {
       return;
     }
     let descriptionKey = [].concat(prefix, name);
@@ -257,6 +258,11 @@ class jsonSchema extends React.Component {
     this.Model.requireAllAction({ required: e, value: this.props.schema });
   };
 
+  changeIsNullCheckBox = e => {
+    this.setState({ checkedIsNull: e });
+    this.Model.isNullAllAction({ required: e, value: this.props.schema });
+  };
+
   render() {
     const {
       visible,
@@ -265,12 +271,13 @@ class jsonSchema extends React.Component {
       advVisible,
       type,
       checked,
+      checkedIsNull,
       editorModalName
     } = this.state;
     const { schema } = this.props;
 
     let disabled =
-      this.props.schema.type === 'object' || this.props.schema.type === 'array' ? false : true;
+      this.props.schema.type.includes('object') || this.props.schema.type.includes('array') ? false : true;
 
     return (
       <div className="json-schema-react-editor">
@@ -375,7 +382,7 @@ class jsonSchema extends React.Component {
               <Col span={8} className="col-item name-item col-item-name">
                 <Row type="flex" justify="space-around" align="middle">
                   <Col span={2} className="down-style-col">
-                    {schema.type === 'object' ? (
+                    {schema.type.includes('object') ? (
                       <span className="down-style" onClick={this.clickIcon}>
                         {this.state.show ? (
                           <Icon className="icon-object" type="caret-down" />
@@ -387,15 +394,22 @@ class jsonSchema extends React.Component {
                   </Col>
                   <Col span={22}>
                     <Input
-                      addonAfter={
-                        <Tooltip placement="top" title={'checked_all'}>
+                      addonAfter={[
+                        <Tooltip placement="top" title={'checked_all'} key={'checked_all1'}>
                           <Checkbox
                             checked={checked}
                             disabled={disabled}
                             onChange={e => this.changeCheckBox(e.target.checked)}
                           />
-                        </Tooltip>
-                      }
+                        </Tooltip>,
+                        <Tooltip placement="top" title={'checked_all'} key={'checked_all2'}>
+                        <Checkbox
+                          checked={checkedIsNull}
+                          disabled={disabled}
+                          onChange={e => this.changeIsNullCheckBox(e.target.checked)}
+                        />
+                      </Tooltip>
+                      ]}
                       disabled
                       value="root"
                     />
@@ -462,7 +476,7 @@ class jsonSchema extends React.Component {
                     <Icon type="setting" />
                   </Tooltip>
                 </span>
-                {schema.type === 'object' ? (
+                {schema.type.includes('object') ? (
                   <span onClick={() => this.addChildField('properties')}>
                     <Tooltip placement="top" title={LocalProvider('add_child_node')}>
                       <Icon type="plus" className="plus" />

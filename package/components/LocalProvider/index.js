@@ -34,6 +34,7 @@ const langs = {
     'enum_desc': 'desc',
     'enum_desc_msg': 'enum description',
     'required': 'required',
+    'isNull': 'isNull',
     'mock': 'mock',
     'mockLink': 'Help'
   },
@@ -69,6 +70,7 @@ const langs = {
     'enum_desc': '备注',
     'enum_desc_msg': '备注描述信息',
     'required': '是否必须',
+    'isNull': '是否可以为null',
     'mock': 'mock',
     'mockLink': '查看文档'
   }
